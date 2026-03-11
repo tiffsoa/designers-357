@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
@@ -20,15 +19,14 @@ export function LoginForm() {
     navigate("/dashboard");
   };
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm border-primary-foreground">
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
-        <CardAction>
-          <Button variant="link">Register</Button>
-        </CardAction>
+        <div className="flex items-center justify-between">
+          <CardTitle>Login to your account</CardTitle>
+          <CardAction>
+            <Button variant="link">Register</Button>
+          </CardAction>
+        </div>
       </CardHeader>
       <form onSubmit={handleLogin}>
         <CardContent>
