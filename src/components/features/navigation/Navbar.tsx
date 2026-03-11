@@ -15,7 +15,7 @@ export default function Navbar() {
     }`;
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-[#bbf7d0] bg-muted">
       <div className="flex h-16 items-center w-full px-6">
         <div className="flex w-[180px]">
           <NavLink to="/dashboard" className="flex items-center">

@@ -47,7 +47,7 @@
 
 :root {
     --radius: 0.625rem;
-    --background: rgb(250, 255, 252);
+    --background: rgb(239, 249, 243);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -57,7 +57,7 @@
     --primary-foreground: oklch(94.167% 0.06031 161.411);
     --secondary: rgb(200, 231, 216);
     --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
+    --muted: oklch(99.569% 0.00586 171.541);
     --muted-foreground: oklch(0.556 0 0);
     --accent: rgb(195, 243, 219);
     --accent-foreground: oklch(0.205 0 0);
