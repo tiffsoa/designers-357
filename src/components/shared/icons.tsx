@@ -1,5 +1,7 @@
-import { Eye } from "lucide-react";
+import { Eye, Settings, User } from "lucide-react";
 
 export const Icons = {
-    eyeLogo: Eye
+    eyeLogo: Eye,
+    settingsIcon: Settings,
+    userIcon: User,
 }
