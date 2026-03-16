@@ -24,15 +24,15 @@ export default function Navbar() {
         </div>
 
         <div className="flex flex-1 items-center justify-center space-x-1">
-          <NavLink to="/dashboard" className={navLinkStyle}>
+          <a href="#welcome" className={navLinkStyle({ isActive: false })}>
             Dashboard
-          </NavLink>
-          <NavLink to="/projects" className={navLinkStyle}>
+          </a>
+          <a href="#insights" className={navLinkStyle({ isActive: false })}>
             Goals
-          </NavLink>
-          <NavLink to="/learn" className={navLinkStyle}>
+          </a>
+          <a href="#dictionary" className={navLinkStyle({ isActive: false })}>
             Learn
-          </NavLink>
+          </a>
         </div>
 
         <div className="flex w-[180px] items-center justify-end space-x-4">
