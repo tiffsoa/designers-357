@@ -16,7 +16,7 @@ export default function Dictionary() {
 	}
 
 	return (
-		<div  id="dictionary" className="ml-30 mr-30 mt-8 mb-8 scroll-mt-20">
+		<div  id="dictionary" className="mx-8 mt-8 pb-12 scroll-mt-20">
 			<Card className="rounded-xl">
 				<CardHeader>
 					<CardTitle className="text-xl font-bold flex items-center gap-2">

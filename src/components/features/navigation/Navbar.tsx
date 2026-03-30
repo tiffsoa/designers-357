@@ -24,12 +24,12 @@ export default function Navbar() {
         </div>
 
         <div className="flex flex-1 items-center justify-center space-x-1">
-          <a href="#welcome" className={navLinkStyle({ isActive: false })}>
+          <NavLink to="/dashboard" className={navLinkStyle}>
             Dashboard
-          </a>
-          <a href="#insights" className={navLinkStyle({ isActive: false })}>
+          </NavLink>
+          <NavLink to="/goals" className={navLinkStyle}>
             Goals
-          </a>
+          </NavLink>
           <a href="#dictionary" className={navLinkStyle({ isActive: false })}>
             Learn
           </a>

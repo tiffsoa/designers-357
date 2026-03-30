@@ -2,7 +2,7 @@ import {Icons} from "@/components/shared/icons";
 
 export function WelcomeBanner() {
   return (
-    <div id="welcome" className="bg-primary text-background rounded-xl p-8 mb-8 mt-8 ml-30 mr-30 relative overflow-hidden scroll-mt-40">
+    <div id="welcome" className="bg-primary text-background rounded-xl p-8 mb-8 mt-8 mx-8 relative overflow-hidden scroll-mt-40">
       <div className="pointer-events-none absolute inset-0 opacity-10">
         <div className="absolute -top-10 -right-10 size-40 rounded-full bg-primary-foreground" />
         <div className="absolute -bottom-8 -left-8 size-32 rounded-full bg-primary-foreground" />
