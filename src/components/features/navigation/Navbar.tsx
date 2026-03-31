@@ -43,12 +43,12 @@ export default function Navbar() {
             </NavLink>
           </Button>
 
-          <NavLink to="/profile">
-            <Avatar className="h-9 w-9 border border-border hover:border-primary transition">
+          <div>
+            <Avatar className="h-9 w-9 border border-border transition">
               <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-6.png" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>SJ</AvatarFallback>
             </Avatar>
-          </NavLink>
+          </div>
         </div>
       </div>
     </nav>
