@@ -27,10 +27,7 @@ export default function Navbar() {
           <NavLink to="/dashboard" className={navLinkStyle}>
             Dashboard
           </NavLink>
-          <NavLink to="/goals" className={navLinkStyle}>
-            Goals
-          </NavLink>
-          <a href="#dictionary" className={navLinkStyle({ isActive: false })}>
+          <a href="/dashboard#dictionary" className={navLinkStyle({ isActive: false })}>
             Learn
           </a>
         </div>

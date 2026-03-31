@@ -72,6 +72,26 @@ export const saveUserProfile = (profile: UserProfile): void => {
   localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
 };
 
+export const addGoal = (goal: Omit<LifeGoal, "id" | "currentAmount">): void => {
+  const goals = getGoals();
+  const newGoal: LifeGoal = {
+    ...goal,
+    id: Date.now().toString(),
+    currentAmount: 0,
+  };
+  saveGoals([...goals, newGoal]);
+};
+
+export const updateGoal = (goalId: string, updates: Partial<Omit<LifeGoal, "id" | "currentAmount">>): void => {
+  const goals = getGoals();
+  saveGoals(goals.map((g) => (g.id === goalId ? { ...g, ...updates } : g)));
+};
+
+export const deleteGoal = (goalId: string): void => {
+  const goals = getGoals();
+  saveGoals(goals.filter((g) => g.id !== goalId));
+};
+
 export const addMoneyToGoal = (goalId: string, amount: number): void => {
   const goals = getGoals();
   const updated = goals.map((goal) =>
