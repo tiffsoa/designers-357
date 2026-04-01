@@ -51,7 +51,7 @@ export default function DashboardPage() {
       <Insights goals={goals} profile={profile} />
 
       {/* Goals Section */}
-      <div className="py-8 mb-8 mx-8">
+      <div id="goals"className="py-8 mb-8 mx-8">
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-gray-800">Your Life Goals</h2>
           <p className="text-sm text-gray-500 mt-0.5">
