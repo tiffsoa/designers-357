@@ -48,7 +48,7 @@ export default function ManifestationSlider() {
   }
 
   return (
-    <div className="ml-30 mr-30 mt-8 mb-8">
+    <div className="mt-8 mb-8 px-8">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
         <div className="mb-4">
           <h2 className="flex items-center gap-2 text-xl font-bold">

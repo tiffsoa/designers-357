@@ -1,10 +1,12 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Icons } from "@/components/shared/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/components/shared/logo";
 
 export default function Navbar() {
+  const location = useLocation();
+
   const navLinkStyle = ({ isActive }: { isActive: boolean }) =>
     `${buttonVariants({ variant: isActive ? "secondary" : "ghost" })} 
     px-4 py-2 transition-all font-semibold text-sm
@@ -13,6 +15,14 @@ export default function Navbar() {
         ? "!bg-[#bbf7d0] !text-[#064e3b]"
         : "text-muted-foreground hover:!bg-[#bbf7d0] hover:!text-[#064e3b]"
     }`;
+
+  // Check the path and hash to determine which anchor should be styled as active
+  const isDashboardActive =
+    location.pathname === "/dashboard" && location.hash === "";
+  const isGoalsActive =
+    location.pathname === "/dashboard" && location.hash === "#goals";
+  const isLearnActive =
+    location.pathname === "/dashboard" && location.hash === "#dictionary";
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-[#bbf7d0] bg-muted">
@@ -24,13 +34,22 @@ export default function Navbar() {
         </div>
 
         <div className="flex flex-1 items-center justify-center space-x-1">
-          <a href="#welcome" className={navLinkStyle({ isActive: false })}>
+          <a
+            href="/dashboard"
+            className={navLinkStyle({ isActive: isDashboardActive })}
+          >
             Dashboard
           </a>
-          <a href="#insights" className={navLinkStyle({ isActive: false })}>
+          <a
+            href="/dashboard#goals"
+            className={navLinkStyle({ isActive: isGoalsActive })}
+          >
             Goals
           </a>
-          <a href="#dictionary" className={navLinkStyle({ isActive: false })}>
+          <a
+            href="/dashboard#dictionary"
+            className={navLinkStyle({ isActive: isLearnActive })}
+          >
             Learn
           </a>
         </div>
@@ -43,12 +62,12 @@ export default function Navbar() {
             </NavLink>
           </Button>
 
-          <NavLink to="/profile">
-            <Avatar className="h-9 w-9 border border-border hover:border-primary transition">
+          <div>
+            <Avatar className="h-9 w-9 border border-border transition">
               <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-6.png" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>SJ</AvatarFallback>
             </Avatar>
-          </NavLink>
+          </div>
         </div>
       </div>
     </nav>
