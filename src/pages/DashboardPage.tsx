@@ -6,6 +6,7 @@ import { WelcomeBanner } from "@/components/features/welcomeBanner/welcomeBanner
 import Insights from "@/components/features/insights/Insights";
 import Dictionary from "../components/features/dictionary/Dictionary";
 import ManifestationSlider from "@/components/features/slider/manifestationSlider";
+import { GrowthGarden } from "@/components/features/plant/GrowthGarden";
 
 import { GoalCard } from "@/components/features/goals/GoalCard";
 import { AddGoalModal } from "@/components/features/goals/AddGoalModal";
@@ -22,9 +23,26 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const refreshData = () => {
+  const [plantHealth, setPlantHealth] = useState(75);
+  const [plantLevel, setPlantLevel] = useState(1);
+
+  const waterPlant = () => {
+    setPlantHealth((prev) => {
+      const newHealth = prev + 10;
+      if (newHealth >= 100 && plantLevel < 4) {
+        setPlantLevel((l) => l + 1);
+        return newHealth - 100;
+      }
+      return Math.min(newHealth, 100);
+    });
+  };
+
+  const refreshData = (action?: "deposit" | "edit" | "delete") => {
     setGoals(getGoals());
     setProfile(getUserProfile());
+    if (action === "deposit") {
+      waterPlant();
+    }
   };
 
   const scroll = (dir: "left" | "right") => {
@@ -47,8 +65,6 @@ export default function DashboardPage() {
 
       <Insights goals={goals} profile={profile} />
 
-      <ManifestationSlider />
-
       <div id="goals" className="py-8 mb-8 mx-8">
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-gray-800">Your Life Goals</h2>
@@ -62,10 +78,7 @@ export default function DashboardPage() {
             <ChevronLeft />
           </Button>
 
-          <div
-            ref={scrollRef}
-            className="flex-1 flex gap-5 overflow-x-auto"
-          >
+          <div ref={scrollRef} className="flex-1 flex gap-5 overflow-x-auto">
             {goals.map((goal, index) => (
               <div key={goal.id} style={{ width: 288 }}>
                 <GoalCard goal={goal} index={index} onUpdate={refreshData} />
@@ -87,6 +100,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div className="mx-8 mb-16 grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <GrowthGarden health={plantHealth} level={plantLevel} />
+        <ManifestationSlider />
+      </div>
+      
       <Dictionary />
 
       <AddGoalModal

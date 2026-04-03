@@ -46,7 +46,7 @@ type DialogView = "add" | "edit" | "delete";
 interface GoalCardProps {
   goal: LifeGoal;
   index: number;
-  onUpdate: () => void;
+  onUpdate: (action?: "deposit" | "edit" | "delete") => void;
 }
 
 export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
@@ -96,7 +96,7 @@ export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
     toast.success(`$${value} added to ${goal.title}!`);
     setAmount("");
     closeDialog();
-    onUpdate();
+    onUpdate("deposit");
   };
 
   const handleSaveEdit = () => {

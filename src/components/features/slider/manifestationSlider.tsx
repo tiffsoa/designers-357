@@ -41,7 +41,6 @@ export default function ManifestationSlider() {
   };
 
   return (
-    <div className="mt-8 mb-8 px-8">
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         {/* Header */}
         <div className="mb-6 flex flex-col items-start border-b border-border pb-4">
@@ -132,6 +131,5 @@ export default function ManifestationSlider() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
