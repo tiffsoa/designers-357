@@ -27,7 +27,8 @@ export default function Settings() {
   );
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // New state for logout
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   const totalTarget = goals.reduce((acc, g) => acc + g.targetAmount, 0);
   const totalCurrent = goals.reduce((acc, g) => acc + g.currentAmount, 0);
@@ -47,7 +48,7 @@ export default function Settings() {
     }
   };
 
-  const handleSave = () => {
+  const handleSaveClick = () => {
     // Validation check
     if (
       !income ||
@@ -64,7 +65,6 @@ export default function Settings() {
       return;
     }
 
-    // Save to local storage
     const updatedProfile = {
       ...profile,
       weeklyIncome: parseFloat(income),
@@ -72,9 +72,23 @@ export default function Settings() {
     };
 
     saveUserProfile(updatedProfile);
-    setProfile(updatedProfile); // Update local UI state
+    setProfile(updatedProfile); 
 
     setError("");
+    setShowSaveConfirm(true);
+  };
+
+  const confirmSave = () => {
+    const updatedProfile = {
+      ...profile,
+      weeklyIncome: parseFloat(income),
+      weeklySavings: parseFloat(savingsTarget),
+    };
+
+    saveUserProfile(updatedProfile);
+    setProfile(updatedProfile);
+
+    setShowSaveConfirm(false);
     setShowSuccess(true);
     toast.success("Settings saved successfully! 🎉");
   };
@@ -218,7 +232,7 @@ export default function Settings() {
             </div>
 
             <Button
-              onClick={handleSave}
+              onClick={handleSaveClick}
               className="bg-primary hover:bg-primary/90 text-white py-5 px-6 rounded-xl font-bold transition-colors"
             >
               Save Changes
@@ -282,6 +296,51 @@ export default function Settings() {
 
       {/* --- OVERLAYS & MODALS --- */}
       <AnimatePresence>
+        {/* Save Confirmation Modal */}
+        {showSaveConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            onClick={() => setShowSaveConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
+            >
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mb-6">
+                <SettingsIcon className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Confirm Changes
+              </h3>
+              <p className="text-gray-600 mb-8 text-sm">
+                Are you sure you want to update your financial settings? This
+                will change how your progress is calculated.
+              </p>
+              <div className="flex gap-3 w-full">
+                <Button
+                  onClick={() => setShowSaveConfirm(false)}
+                  variant="outline"
+                  className="flex-1 py-6 rounded-xl font-bold text-gray-700 border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmSave}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-6 rounded-xl font-bold transition-colors"
+                >
+                  Yes, Save
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* Success Modal */}
         {showSuccess && (
           <motion.div
@@ -334,8 +393,8 @@ export default function Settings() {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
             >
-              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
-                <LogOut className="w-10 h-10 text-red-600" />
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mb-6">
+                <LogOut className="w-10 h-10 text-primary" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 Ready to leave?
