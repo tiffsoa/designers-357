@@ -5,6 +5,16 @@ const STORAGE_KEYS = {
   PROFILE: "visions_profile",
 };
 
+export function getWalletBalance(): number {
+  const balance = localStorage.getItem("visions_wallet_balance");
+  //default starting balance of $5,000
+  return balance ? parseFloat(balance) : 5000;
+}
+
+export function updateWalletBalance(newBalance: number) {
+  localStorage.setItem("visions_wallet_balance", newBalance.toString());
+}
+
 // Default user profile
 const DEFAULT_PROFILE: UserProfile = {
   weeklyIncome: 400,

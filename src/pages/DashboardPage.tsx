@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useRef} from "react";
+import { Plus, ChevronLeft, ChevronRight, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/features/navigation/Navbar";
 import { WelcomeBanner } from "@/components/features/welcomeBanner/welcomeBanner";
@@ -10,7 +10,12 @@ import { GrowthGarden } from "@/components/features/plant/GrowthGarden";
 
 import { GoalCard } from "@/components/features/goals/GoalCard";
 import { AddGoalModal } from "@/components/features/goals/AddGoalModal";
-import { getGoals, getUserProfile, addGoal } from "../lib/storage";
+import {
+  getGoals,
+  getUserProfile,
+  addGoal,
+  getWalletBalance,
+} from "../lib/storage";
 import { Button } from "@/components/ui/button";
 import type { LifeGoal } from "@/lib/types";
 import { toast } from "sonner";
@@ -20,29 +25,31 @@ const CARD_WIDTH = 288 + 20;
 export default function DashboardPage() {
   const [goals, setGoals] = useState(getGoals());
   const [profile, setProfile] = useState(getUserProfile());
+  const [walletBalance, setWalletBalance] = useState(getWalletBalance());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [plantHealth, setPlantHealth] = useState(75);
-  const [plantLevel, setPlantLevel] = useState(1);
+  const calculatePlantStats = () => {
+    const totalTarget = goals.reduce((acc, g) => acc + g.targetAmount, 0);
+    const totalCurrent = goals.reduce((acc, g) => acc + g.currentAmount, 0);
 
-  const waterPlant = () => {
-    setPlantHealth((prev) => {
-      const newHealth = prev + 10;
-      if (newHealth >= 100 && plantLevel < 4) {
-        setPlantLevel((l) => l + 1);
-        return newHealth - 100;
-      }
-      return Math.min(newHealth, 100);
-    });
+    if (totalTarget === 0) return { health: 0, level: 1 };
+
+    const overallProgress = (totalCurrent / totalTarget) * 100;
+
+    // Level 1: 0-25%, Level 2: 26-50%, Level 3: 51-75%, Level 4: 76-100%
+    const level = Math.min(4, Math.max(1, Math.ceil(overallProgress / 25)));
+    const health = Math.floor(overallProgress);
+
+    return { health, level };
   };
 
-  const refreshData = (action?: "deposit" | "edit" | "delete") => {
+  const plantStats = calculatePlantStats();
+
+  const refreshData = () => {
     setGoals(getGoals());
     setProfile(getUserProfile());
-    if (action === "deposit") {
-      waterPlant();
-    }
+    setWalletBalance(getWalletBalance());
   };
 
   const scroll = (dir: "left" | "right") => {
@@ -63,48 +70,88 @@ export default function DashboardPage() {
       <Navbar />
       <WelcomeBanner />
 
+      <div className="mx-8 mb-6 flex items-center justify-between bg-primary/10 border border-primary/20 rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/20 p-2 rounded-lg">
+            <Wallet className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Available to Save
+            </p>
+            <p className="text-2xl font-bold text-foreground">
+              $
+              {walletBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <Insights goals={goals} profile={profile} />
 
       <div id="goals" className="py-8 mb-8 mx-8">
-        <div className="mb-5">
+        <div className="mb-5 flex justify-between items-end">
           <h2 className="text-2xl font-bold text-gray-800">Your Life Goals</h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {goals.length} active goal{goals.length !== 1 ? "s" : ""}
           </p>
         </div>
 
-        <div className="flex items-stretch gap-3">
-          <Button onClick={() => scroll("left")} size="icon">
-            <ChevronLeft />
-          </Button>
-
-          <div ref={scrollRef} className="flex-1 flex gap-5 overflow-x-auto">
-            {goals.map((goal, index) => (
-              <div key={goal.id} style={{ width: 288 }}>
-                <GoalCard goal={goal} index={index} onUpdate={refreshData} />
-              </div>
-            ))}
-
-            <motion.div
-              onClick={() => setIsModalOpen(true)}
-              className="border-dashed border p-6 cursor-pointer"
-              style={{ width: 288 }}
-            >
-              <Plus />
-            </motion.div>
+        {goals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-border rounded-xl bg-muted/30">
+            <span className="text-6xl mb-4">🌱</span>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No goals yet!
+            </h3>
+            <p className="text-muted-foreground text-center max-w-sm mb-6">
+              Every big journey starts with a single step. Create your first
+              financial goal to start growing your garden.
+            </p>
+            <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> Create First Goal
+            </Button>
           </div>
+        ) : (
+          <div className="flex items-stretch gap-3">
+            <Button onClick={() => scroll("left")} size="icon">
+              <ChevronLeft />
+            </Button>
 
-          <Button onClick={() => scroll("right")} size="icon">
-            <ChevronRight />
-          </Button>
-        </div>
+            <div ref={scrollRef} className="flex-1 flex gap-5 overflow-x-auto">
+              {goals.map((goal, index) => (
+                <div key={goal.id} style={{ width: 288 }}>
+                  <GoalCard
+                    goal={goal}
+                    index={index}
+                    onUpdate={refreshData}
+                    walletBalance={walletBalance}
+                  />
+                </div>
+              ))}
+
+              <motion.div
+                onClick={() => setIsModalOpen(true)}
+                className="border-dashed border p-6 cursor-pointer flex items-center justify-center hover:bg-muted/50 transition-colors rounded-xl"
+                style={{ width: 288 }}
+              >
+                <Plus />
+              </motion.div>
+            </div>
+
+            <Button onClick={() => scroll("right")} size="icon">
+              <ChevronRight />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="mx-8 mb-16 grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <GrowthGarden health={plantHealth} level={plantLevel} />
+        <GrowthGarden health={plantStats.health} level={plantStats.level} />
         <ManifestationSlider />
       </div>
-      
+
       <Dictionary />
 
       <AddGoalModal

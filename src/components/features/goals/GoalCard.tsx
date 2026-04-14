@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "motion/react";
+import confetti from "canvas-confetti";
 import {
   Calendar,
   DollarSign,
   Trash2,
   AlertTriangle,
   Pencil,
+  CheckCircle2,
 } from "lucide-react";
 import type { LifeGoal } from "@/lib/types";
 import {
@@ -19,7 +21,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { addMoneyToGoal, deleteGoal, updateGoal } from "@/lib/storage";
+import {
+  addMoneyToGoal,
+  deleteGoal,
+  updateGoal,
+  updateWalletBalance,
+} from "@/lib/storage";
 import { toast } from "sonner";
 
 const EMOJI_OPTIONS = [
@@ -46,10 +53,16 @@ type DialogView = "add" | "edit" | "delete";
 interface GoalCardProps {
   goal: LifeGoal;
   index: number;
-  onUpdate: (action?: "deposit" | "edit" | "delete") => void;
+  onUpdate: () => void;
+  walletBalance: number;
 }
 
-export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  index,
+  onUpdate,
+  walletBalance,
+}: GoalCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<DialogView>("add");
   const [amount, setAmount] = useState("");
@@ -69,7 +82,18 @@ export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
   const daysRemaining = Math.ceil(
     (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
-  const monthsRemaining = Math.max(0, Math.ceil(daysRemaining / 30));
+
+  let timeRemainingText = "";
+  if (daysRemaining < 0) {
+    timeRemainingText = "Past due";
+  } else if (daysRemaining === 0) {
+    timeRemainingText = "Due today!";
+  } else if (daysRemaining < 30) {
+    timeRemainingText = `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`;
+  } else {
+    const months = Math.round(daysRemaining / 30);
+    timeRemainingText = `${months} month${months !== 1 ? "s" : ""} left`;
+  }
 
   const openEdit = () => {
     setEditTitle(goal.title);
@@ -86,17 +110,31 @@ export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
     setAmount("");
   };
 
+  const isCompleted = goal.currentAmount >= goal.targetAmount;
+
   const handleAddMoney = () => {
     const value = parseFloat(amount);
     if (isNaN(value) || value <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
+
+    if (value > walletBalance) {
+      toast.error("Not enough funds in your wallet!");
+      return;
+    }
+
     addMoneyToGoal(goal.id, value);
-    toast.success(`$${value} added to ${goal.title}!`);
+    updateWalletBalance(walletBalance - value);
+    if (goal.currentAmount + value >= goal.targetAmount) {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      toast.success(`🎉 You did it! ${goal.title} is fully funded!`);
+    } else {
+      toast.success(`$${value} added to ${goal.title}!`);
+    }
     setAmount("");
     closeDialog();
-    onUpdate("deposit");
+    onUpdate();
   };
 
   const handleSaveEdit = () => {
@@ -159,14 +197,19 @@ export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
                   <p className="text-base font-bold text-foreground leading-snug">
                     {goal.title}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {monthsRemaining}{" "}
-                    {monthsRemaining === 1 ? "month" : "months"} left
-                  </p>
+                  {isCompleted ? (
+                    <div className="flex items-center gap-1 mt-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full w-fit">
+                      <CheckCircle2 className="w-3 h-3" /> Goal Reached
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {timeRemainingText}
+                    </p>
+                  )}
                 </div>
               </div>
               <span className="text-2xl font-bold text-primary shrink-0 ml-2">
-                {progress.toFixed(0)}%
+                {Math.min(progress, 100).toFixed(0)}%
               </span>
             </div>
           </div>
@@ -259,30 +302,55 @@ export function GoalCard({ goal, index, onUpdate }: GoalCardProps) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="font-medium">
-                  Amount to Add
-                </Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="pl-9 h-11"
-                    step="0.01"
-                  />
+              {isCompleted ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center space-y-2">
+                  <div className="text-4xl">🥳</div>
+                  <h3 className="font-bold text-emerald-800">
+                    You've reached your target!
+                  </h3>
+                  <p className="text-sm text-emerald-600">
+                    This goal is fully funded. Great job sticking to your
+                    vision.
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Show available balance to the user inside the dialog */}
+                  <div className="text-sm flex justify-between px-1">
+                    <span className="text-muted-foreground">
+                      Available in Wallet:
+                    </span>
+                    <span className="font-semibold text-primary">
+                      ${walletBalance.toLocaleString()}
+                    </span>
+                  </div>
 
-              <Button
-                onClick={handleAddMoney}
-                className="w-full h-11 font-semibold"
-              >
-                Add Money
-              </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="amount" className="font-medium">
+                      Amount to Add
+                    </Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="pl-9 h-11"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleAddMoney}
+                    className="w-full h-11 font-semibold"
+                  >
+                    Add Money
+                  </Button>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-2 border-t border-border mt-4">
                 <Button
