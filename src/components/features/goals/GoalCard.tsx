@@ -140,9 +140,9 @@ export function GoalCard({
 
     if (goal.currentAmount + value >= goal.targetAmount) {
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      toast.success(`🎉 You did it! ${goal.title} is fully funded!`);
+      toast.success(`🎉 You did it! ${goal.title} is fully funded! `);
     } else {
-      toast.success(`$${value} added to ${goal.title}!`);
+      toast.success(`$${value} added to ${goal.title}! Check your Growth Garden to see your plant grow 🌱`);
     }
     setAmount("");
     closeDialog();
@@ -185,7 +185,7 @@ export function GoalCard({
 
   const handleDelete = () => {
     deleteGoal(goal.id);
-    toast.success(`"${goal.title}" removed.`);
+    toast.success(`"${goal.title}" successfully deleted.`);
     closeDialog();
     onUpdate();
   };
@@ -304,11 +304,28 @@ export function GoalCard({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-2xl">
-                {view === "edit" ? displayEmoji : goal.emoji}
-              </span>
-              {view === "edit" ? editTitle || goal.title : goal.title}
+            <DialogTitle className="flex items-center justify-between text-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">
+                  {view === "edit" ? displayEmoji : goal.emoji}
+                </span>
+                {view === "edit" ? editTitle || goal.title : goal.title}
+              </div>
+
+              {view === "add" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-muted-foreground hover:text-foreground flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit();
+                  }}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span className="text-sm font-medium">Edit Goal</span>
+                </Button>
+              )}
             </DialogTitle>
             <DialogDescription>{dialogDescriptions[view]}</DialogDescription>
           </DialogHeader>
@@ -316,30 +333,39 @@ export function GoalCard({
           {/* ── Add money view ── */}
           {view === "add" && (
             <div className="space-y-6 py-2">
+              {/* UPDATED: Clean, unified 4-card grid */}
               <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="bg-muted/50 p-3 rounded-lg flex flex-col items-center justify-center text-sm border border-border">
-                  <span className="text-muted-foreground font-medium">
+                <div className="bg-muted/30 p-3 rounded-xl border border-border flex flex-col items-center justify-center">
+                  <span className="text-xs text-muted-foreground font-medium mb-1">
                     Target Date
                   </span>
-                  <span className="font-semibold text-foreground text-center">
+                  <span className="font-semibold text-foreground text-center leading-tight">
                     {exactTargetDate}
                   </span>
                 </div>
-
-                <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+                <div className="bg-muted/30 rounded-xl p-3 border border-border flex flex-col items-center justify-center">
                   <div className="text-xs text-muted-foreground mb-1 font-medium">
+                    Target Amount
+                  </div>
+                  <div className="text-lg font-bold">
+                    ${goal.targetAmount.toLocaleString()}
+                  </div>
+                </div>
+                {/* We use the primary color just for the "Saved" stat to highlight success */}
+                <div className="bg-primary/10 rounded-xl p-3 border border-primary/20 flex flex-col items-center justify-center">
+                  <div className="text-xs text-primary/80 mb-1 font-medium">
                     Saved so far
                   </div>
                   <div className="text-xl font-bold text-primary">
                     ${goal.currentAmount.toLocaleString()}
                   </div>
                 </div>
-                <div className="bg-muted rounded-xl p-3 border border-border">
+                <div className="bg-muted/30 rounded-xl p-3 border border-border flex flex-col items-center justify-center">
                   <div className="text-xs text-muted-foreground mb-1 font-medium">
-                    Target
+                    Still Needed
                   </div>
-                  <div className="text-xl font-bold">
-                    ${goal.targetAmount.toLocaleString()}
+                  <div className="text-lg font-bold text-foreground">
+                    ${remaining.toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -355,7 +381,7 @@ export function GoalCard({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="bg-muted/20 border border-border rounded-xl p-4 space-y-4">
                   <div className="text-sm flex justify-between px-1">
                     <span className="text-muted-foreground">
                       Available in Wallet:
@@ -366,66 +392,44 @@ export function GoalCard({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="amount" className="font-medium">
-                      Amount to Add
+                    <Label
+                      htmlFor="amount"
+                      className="font-medium text-xs text-muted-foreground uppercase tracking-wider"
+                    >
+                      Amount to Transfer
                     </Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="amount"
                         type="number"
+                        min="0"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
-                        className="pl-9 h-11"
+                        className="pl-9 h-11 bg-background"
                         step="0.01"
                       />
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-1">
                     <Button
                       onClick={() => setView("withdraw")}
                       variant="outline"
-                      className="flex-1 h-11 font-semibold text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      className="flex-1 h-10 font-medium text-muted-foreground hover:text-foreground"
                     >
                       Withdraw
                     </Button>
                     <Button
                       onClick={initiateAddMoney}
-                      className="flex-1 h-11 font-semibold"
+                      className="flex-1 h-10 font-semibold shadow-sm"
                     >
                       Add Money
                     </Button>
                   </div>
                 </div>
               )}
-
-              <div className="flex items-center justify-between pt-2 border-t border-border mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEdit();
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit goal
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setView("delete");
-                  }}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  Delete goal
-                </Button>
-              </div>
             </div>
           )}
 
@@ -506,7 +510,7 @@ export function GoalCard({
 
           {/* ── Edit view ── */}
           {view === "edit" && (
-            <div className="space-y-6 py-2">
+            <div className="space-y-6 p-5 bg-white border border-border rounded-xl mt-2 shadow-inner">
               {/* Goal name */}
               <div className="space-y-2">
                 <Label className="font-medium">Goal Name</Label>
@@ -582,21 +586,28 @@ export function GoalCard({
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex items-center justify-between pt-4 border-t border-border mt-6">
                 <Button
-                  variant="outline"
-                  onClick={() => setView("add")}
-                  className="flex-1"
+                  variant="ghost"
+                  onClick={() => setView("delete")}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive px-2"
                 >
-                  Cancel
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Goal
                 </Button>
-                <Button
-                  onClick={handleSaveEdit}
-                  disabled={!editIsValid}
-                  className="flex-1 font-semibold"
-                >
-                  Save Changes
-                </Button>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setView("add")}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={!editIsValid}
+                    className="font-semibold"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </div>
           )}
