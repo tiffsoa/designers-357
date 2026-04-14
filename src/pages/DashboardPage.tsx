@@ -7,6 +7,15 @@ import Insights from "@/components/features/insights/Insights";
 import Dictionary from "../components/features/dictionary/Dictionary";
 import ManifestationSlider from "@/components/features/slider/manifestationSlider";
 import { GrowthGarden } from "@/components/features/plant/GrowthGarden";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { GoalCard } from "@/components/features/goals/GoalCard";
 import { AddGoalModal } from "@/components/features/goals/AddGoalModal";
@@ -15,6 +24,7 @@ import {
   getUserProfile,
   addGoal,
   getWalletBalance,
+  updateWalletBalance,
 } from "../lib/storage";
 import { Button } from "@/components/ui/button";
 import type { LifeGoal } from "@/lib/types";
@@ -28,6 +38,22 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState(getWalletBalance());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [walletDepositAmount, setWalletDepositAmount] = useState("");
+
+  const handleDepositToWallet = () => {
+    const val = parseFloat(walletDepositAmount);
+    if (isNaN(val) || val <= 0) {
+      toast.error("Please enter a valid positive amount.");
+      return;
+    }
+    updateWalletBalance(walletBalance + val);
+    setWalletBalance(getWalletBalance()); // Refresh state
+    setWalletDepositAmount("");
+    setIsWalletModalOpen(false);
+    toast.success(`$${val.toLocaleString()} added to your wallet!`);
+  };
 
   const calculatePlantStats = () => {
     const totalTarget = goals.reduce((acc, g) => acc + g.targetAmount, 0);
@@ -87,7 +113,40 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
+        <Button
+          onClick={() => setIsWalletModalOpen(true)}
+          variant="outline"
+          className="gap-2 bg-white"
+        >
+          <Plus className="w-4 h-4" /> Add Funds
+        </Button>
       </div>
+
+      <Dialog open={isWalletModalOpen} onOpenChange={setIsWalletModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Deposit to Wallet</DialogTitle>
+            <DialogDescription>
+              Simulate adding money to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Deposit Amount</Label>
+              <Input
+                type="number"
+                min="0"
+                value={walletDepositAmount}
+                onChange={(e) => setWalletDepositAmount(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <Button onClick={handleDepositToWallet} className="w-full">
+              Deposit
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Insights goals={goals} profile={profile} />
 

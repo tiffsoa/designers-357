@@ -11,6 +11,19 @@ export function getWalletBalance(): number {
   return balance ? parseFloat(balance) : 5000;
 }
 
+export function withdrawMoneyFromGoal(goalId: string, amount: number) {
+  const goals = getGoals();
+  const goalIndex = goals.findIndex((g) => g.id === goalId);
+  if (goalIndex > -1) {
+    goals[goalIndex].currentAmount -= amount;
+    // Ensure we don't drop below 0
+    if (goals[goalIndex].currentAmount < 0) {
+      goals[goalIndex].currentAmount = 0;
+    }
+    localStorage.setItem("visions_goals", JSON.stringify(goals));
+  }
+}
+
 export function updateWalletBalance(newBalance: number) {
   localStorage.setItem("visions_wallet_balance", newBalance.toString());
 }
