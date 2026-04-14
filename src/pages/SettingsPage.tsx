@@ -20,7 +20,7 @@ export default function Settings() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(getUserProfile());
-  const [goals, setGoals] = useState(getGoals());
+  const [goals] = useState(getGoals());
   const [income, setIncome] = useState(profile.weeklyIncome.toString());
   const [savingsTarget, setSavingsTarget] = useState(
     profile.weeklySavings.toString(),
