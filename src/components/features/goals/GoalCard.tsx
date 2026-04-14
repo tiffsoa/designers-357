@@ -26,6 +26,7 @@ import {
   deleteGoal,
   updateGoal,
   updateWalletBalance,
+  withdrawMoneyFromGoal,
 } from "@/lib/storage";
 import { toast } from "sonner";
 
@@ -48,7 +49,7 @@ const EMOJI_OPTIONS = [
   "🌱",
 ];
 
-type DialogView = "add" | "edit" | "delete";
+type DialogView = "add" | "edit" | "delete" | "confirmAdd" | "withdraw";
 
 interface GoalCardProps {
   goal: LifeGoal;
@@ -79,9 +80,16 @@ export function GoalCard({
   const deadline = new Date(goal.deadline);
   const today = new Date();
 
+  const exactTargetDate = deadline.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const daysRemaining = Math.ceil(
     (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
+  
 
   let timeRemainingText = "";
   if (daysRemaining < 0) {
@@ -112,26 +120,49 @@ export function GoalCard({
 
   const isCompleted = goal.currentAmount >= goal.targetAmount;
 
-  const handleAddMoney = () => {
+  const initiateAddMoney = () => {
     const value = parseFloat(amount);
     if (isNaN(value) || value <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error("Please enter a valid positive amount");
       return;
     }
-
     if (value > walletBalance) {
       toast.error("Not enough funds in your wallet!");
       return;
     }
+    setView("confirmAdd"); // Move to confirmation screen instead of saving instantly
+  };
 
+  const handleConfirmAdd = () => {
+    const value = parseFloat(amount);
     addMoneyToGoal(goal.id, value);
     updateWalletBalance(walletBalance - value);
+
     if (goal.currentAmount + value >= goal.targetAmount) {
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       toast.success(`🎉 You did it! ${goal.title} is fully funded!`);
     } else {
       toast.success(`$${value} added to ${goal.title}!`);
     }
+    setAmount("");
+    closeDialog();
+    onUpdate();
+  };
+
+  const handleWithdraw = () => {
+    const value = parseFloat(amount);
+    if (isNaN(value) || value <= 0) {
+      toast.error("Please enter a valid positive amount");
+      return;
+    }
+    if (value > goal.currentAmount) {
+      toast.error("You cannot withdraw more than you've saved!");
+      return;
+    }
+
+    withdrawMoneyFromGoal(goal.id, value);
+    updateWalletBalance(walletBalance + value);
+    toast.success(`$${value} withdrawn back to your wallet.`);
     setAmount("");
     closeDialog();
     onUpdate();
@@ -167,9 +198,11 @@ export function GoalCard({
   const displayEmoji = editCustomEmoji || editEmoji;
 
   const dialogDescriptions: Record<DialogView, string> = {
-    add: "Add money to this goal.",
+    add: "Manage the funds for this goal.",
     edit: "Update your goal details below.",
     delete: "This action can't be undone.",
+    confirmAdd: "Confirm your deposit.",
+    withdraw: "Take money out of this goal.",
   };
 
   const safeBgClass = goal.color?.includes("from-")
@@ -284,6 +317,15 @@ export function GoalCard({
           {view === "add" && (
             <div className="space-y-6 py-2">
               <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="bg-muted/50 p-3 rounded-lg flex flex-col items-center justify-center text-sm border border-border">
+                  <span className="text-muted-foreground font-medium">
+                    Target Date
+                  </span>
+                  <span className="font-semibold text-foreground text-center">
+                    {exactTargetDate}
+                  </span>
+                </div>
+
                 <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
                   <div className="text-xs text-muted-foreground mb-1 font-medium">
                     Saved so far
@@ -309,13 +351,11 @@ export function GoalCard({
                     You've reached your target!
                   </h3>
                   <p className="text-sm text-emerald-600">
-                    This goal is fully funded. Great job sticking to your
-                    vision.
+                    This goal is fully funded.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Show available balance to the user inside the dialog */}
                   <div className="text-sm flex justify-between px-1">
                     <span className="text-muted-foreground">
                       Available in Wallet:
@@ -343,12 +383,21 @@ export function GoalCard({
                     </div>
                   </div>
 
-                  <Button
-                    onClick={handleAddMoney}
-                    className="w-full h-11 font-semibold"
-                  >
-                    Add Money
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => setView("withdraw")}
+                      variant="outline"
+                      className="flex-1 h-11 font-semibold text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                    >
+                      Withdraw
+                    </Button>
+                    <Button
+                      onClick={initiateAddMoney}
+                      className="flex-1 h-11 font-semibold"
+                    >
+                      Add Money
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -375,6 +424,81 @@ export function GoalCard({
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   Delete goal
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Confirm Add View ── */}
+          {view === "confirmAdd" && (
+            <div className="space-y-6 py-2">
+              <div className="bg-primary/10 border border-primary/20 rounded-xl p-6 text-center">
+                <p className="text-muted-foreground text-sm mb-2">
+                  You are about to add
+                </p>
+                <p className="text-4xl font-bold text-primary mb-2">
+                  ${parseFloat(amount).toLocaleString()}
+                </p>
+                <p className="text-muted-foreground text-sm">to {goal.title}</p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setView("add")}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmAdd}
+                  className="flex-1 font-semibold"
+                >
+                  Confirm Deposit
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Withdraw View ── */}
+          {view === "withdraw" && (
+            <div className="space-y-6 py-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                <p className="text-amber-800 text-sm">
+                  Move money from this goal back to your wallet.
+                </p>
+                <p className="text-amber-900 font-bold mt-2">
+                  Available to withdraw: ${goal.currentAmount.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Amount to Withdraw</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-9 h-11"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setView("add")}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleWithdraw}
+                  className="flex-1 font-semibold bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Confirm Withdrawal
                 </Button>
               </div>
             </div>

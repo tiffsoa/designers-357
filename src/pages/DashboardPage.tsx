@@ -165,8 +165,7 @@ export default function DashboardPage() {
               No goals yet!
             </h3>
             <p className="text-muted-foreground text-center max-w-sm mb-6">
-              Every big journey starts with a single step. Create your first
-              financial goal to start growing your garden.
+              Create your first financial goal to start growing your plant.
             </p>
             <Button onClick={() => setIsModalOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Create First Goal
