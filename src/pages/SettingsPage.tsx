@@ -14,15 +14,28 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import { getUserProfile, getGoals, saveUserProfile } from "../lib/storage";
 
 export default function Settings() {
   const navigate = useNavigate();
 
-  // State management
-  const [income, setIncome] = useState("300");
+  const [profile, setProfile] = useState(getUserProfile());
+  const [goals, setGoals] = useState(getGoals());
+  const [income, setIncome] = useState(profile.weeklyIncome.toString());
+  const [savingsTarget, setSavingsTarget] = useState(
+    profile.weeklySavings.toString(),
+  );
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // New state for logout
+
+  const totalTarget = goals.reduce((acc, g) => acc + g.targetAmount, 0);
+  const totalCurrent = goals.reduce((acc, g) => acc + g.currentAmount, 0);
+  const overallProgress =
+    totalTarget === 0 ? 0 : (totalCurrent / totalTarget) * 100;
+
+  const plantLevel = Math.min(4, Math.max(1, Math.ceil(overallProgress / 25)));
+  const plantHealth = Math.floor(overallProgress);
 
   const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -36,15 +49,30 @@ export default function Settings() {
 
   const handleSave = () => {
     // Validation check
-    if (!income || income.trim() === "") {
-      setError("Please enter your weekly income.");
+    if (
+      !income ||
+      income.trim() === "" ||
+      !savingsTarget ||
+      savingsTarget.trim() === ""
+    ) {
+      setError("Please fill out all fields.");
       return;
     }
 
-    if (parseFloat(income) <= 0) {
-      setError("Income must be greater than $0.");
+    if (parseFloat(income) <= 0 || parseFloat(savingsTarget) <= 0) {
+      setError("Values must be greater than $0.");
       return;
     }
+
+    // Save to local storage
+    const updatedProfile = {
+      ...profile,
+      weeklyIncome: parseFloat(income),
+      weeklySavings: parseFloat(savingsTarget),
+    };
+
+    saveUserProfile(updatedProfile);
+    setProfile(updatedProfile); // Update local UI state
 
     setError("");
     setShowSuccess(true);
@@ -158,6 +186,37 @@ export default function Settings() {
               )}
             </div>
 
+            <div className="mt-4">
+              <Label
+                htmlFor="weeklySavings"
+                className="text-base font-medium text-gray-700"
+              >
+                Weekly Savings Target
+              </Label>
+              <div className="mt-2 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">$</span>
+                </div>
+                <Input
+                  id="weeklySavings"
+                  type="text"
+                  inputMode="decimal"
+                  value={savingsTarget}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || /^\d*\.?\d*$/.test(val))
+                      setSavingsTarget(val);
+                  }}
+                  className="text-base py-5 pl-7"
+                  placeholder="0.00"
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                The amount you plan to save each week. This updates your
+                Insights panel.
+              </p>
+            </div>
+
             <Button
               onClick={handleSave}
               className="bg-primary hover:bg-primary/90 text-white py-5 px-6 rounded-xl font-bold transition-colors"
@@ -182,15 +241,24 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-green-50 rounded-xl p-4 border border-green-100">
               <div className="text-sm text-gray-600">Plant Level</div>
-              <div className="text-3xl font-bold text-green-600">4</div>
+              {/* Uses dynamic plant level */}
+              <div className="text-3xl font-bold text-green-600">
+                {plantLevel}
+              </div>
             </div>
             <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
               <div className="text-sm text-gray-600">Current Streak</div>
-              <div className="text-3xl font-bold text-orange-600">2 days</div>
+              {/* Uses dynamic streak from storage */}
+              <div className="text-3xl font-bold text-orange-600">
+                {profile.streak} days
+              </div>
             </div>
             <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
               <div className="text-sm text-gray-600">Plant Health</div>
-              <div className="text-3xl font-bold text-emerald-600">80%</div>
+              {/* Uses dynamic plant health */}
+              <div className="text-3xl font-bold text-emerald-600">
+                {plantHealth}%
+              </div>
             </div>
           </div>
         </motion.div>
@@ -244,7 +312,7 @@ export default function Settings() {
                 onClick={() => setShowSuccess(false)}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-xl font-bold text-lg transition-colors"
               >
-                Awesome
+                OK
               </Button>
             </motion.div>
           </motion.div>
