@@ -219,7 +219,11 @@ export function GoalCard({
       >
         <Card
           onClick={() => setIsOpen(true)}
-          className="h-full cursor-pointer gap-0 py-0 hover:border-primary/50 hover:shadow-md transition-all flex flex-col"
+          className={`h-full cursor-pointer gap-0 py-0 hover:shadow-md transition-all flex flex-col ${
+            isCompleted
+              ? "bg-emerald-50 border-emerald-200 hover:border-emerald-300"
+              : "bg-card hover:border-primary/50"
+          }`}
         >
           {/* Header */}
           <div className="px-6 pt-6 pb-4">
